@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: protein-crud-example
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/light-weight-baby
+    username: postgres
+    password: postgres
+
+  jpa:
+    show-sql: true
