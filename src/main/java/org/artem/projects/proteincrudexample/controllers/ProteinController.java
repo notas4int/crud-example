@@ -39,13 +39,12 @@ public class ProteinController {
             description = "Create protein info objects by protein entered object. The request includes the protein's id, name, brand, and cost."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Successful creation of the protein"),
+            @ApiResponse(responseCode = "200", description = "Successful creation of the protein", content = @Content(schema = @Schema(implementation = Protein.class))),
             @ApiResponse(responseCode = "400", description = "Protein isn't created" ,  content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
     })
     @PostMapping("/createProtein")
-    public ResponseEntity<HttpStatus> createProtein(@RequestBody Protein protein) {
-        proteinService.saveProtein(protein);
-        return ResponseEntity.ok(HttpStatus.OK);
+    public ResponseEntity<Protein> createProtein(@RequestBody Protein protein) {
+        return ResponseEntity.ok(proteinService.saveProtein(protein));
     }
 
     @Operation(
@@ -53,13 +52,12 @@ public class ProteinController {
             description = "Update protein info objects by protein entered object. The request includes the protein's id, name, brand, and cost."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Successful update of the protein"),
+            @ApiResponse(responseCode = "200", description = "Successful update of the protein", content = @Content(schema = @Schema(implementation = Protein.class))),
             @ApiResponse(responseCode = "400", description = "Protein isn't updated" , content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
     })
     @PatchMapping("/updateProtein")
-    public ResponseEntity<HttpStatus> updateProtein(@RequestBody Protein protein) {
-        proteinService.updateProtein(protein);
-        return ResponseEntity.ok(HttpStatus.OK);
+    public ResponseEntity<Protein> updateProtein(@RequestBody Protein protein) {
+        return ResponseEntity.ok(proteinService.updateProtein(protein));
     }
 
     @Operation(
