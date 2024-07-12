@@ -1,11 +1,8 @@
 package org.artem.projects.proteincrudexample.services;
 
 import org.artem.projects.proteincrudexample.entities.Protein;
-import org.artem.projects.proteincrudexample.exceptions.ProteinCreatingException;
-import org.artem.projects.proteincrudexample.exceptions.ProteinDeletingException;
 import org.artem.projects.proteincrudexample.exceptions.ProteinNotFoundException;
-import org.artem.projects.proteincrudexample.exceptions.ProteinUpdatingException;
-import org.artem.projects.proteincrudexample.repositories.ProteinRepositoryImpl;
+import org.artem.projects.proteincrudexample.repositories.ProteinRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,13 +11,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProteinServiceImplTest {
     @Mock
-    private ProteinRepositoryImpl proteinRepository;
+    private ProteinRepository proteinRepository;
 
     @InjectMocks
     private ProteinServiceImpl proteinService;
@@ -34,68 +33,62 @@ class ProteinServiceImplTest {
 
     @Test
     void shouldReturnProteinObject_AfterFindById() {
-        Protein exceptedProtein = new Protein(1, "Protein", "Brand", 100);
-        int requiredId = 1;
+        Optional<Protein> exceptedOptionalProtein = Optional.of(new Protein(1, "Protein", "Brand", 100));
+        long requiredId = 1;
 
-        when(proteinRepository.getProtein(requiredId)).thenReturn(exceptedProtein);
+        when(proteinRepository.findById(1L)).thenReturn(exceptedOptionalProtein);
 
-        assertEquals(exceptedProtein, proteinService.findProteinById(requiredId));
+        assertEquals(exceptedOptionalProtein.get(), proteinService.findProteinById(requiredId));
     }
 
     @Test
-    void shouldThrowProteinNotFoundException_AfterFindByWrongId() {
-        int requiredId = 2;
+    void shouldThrowProteinNotFoundException_AfterFindingByWrongId() {
+        long requiredId = 2;
 
-        when(proteinRepository.getProtein(requiredId)).thenThrow(ProteinNotFoundException.class);
+        when(proteinRepository.findById(2L)).thenReturn(Optional.empty());
 
         assertThrows(ProteinNotFoundException.class, () -> proteinService.findProteinById(requiredId));
     }
 
     @Test
-    void shouldReturnRightChangedRows_AfterCreatingProtein() {
-        when(proteinRepository.createProtein(protein)).thenReturn(1);
+    void shouldReturnProtein_AfterCreatingProtein() {
+        Protein exceptedProtein = new Protein(1, "Protein", "Brand", 100);
 
-        assertEquals(1, proteinService.saveProtein(protein));
-    }
+        when(proteinRepository.save(protein)).thenReturn(exceptedProtein);
 
-    @Test
-    void shouldThrowProteinCreatingException_AfterCreatingProtein() {
-        Protein protein = new Protein(2, "Protein", "Brand", 100);
-        when(proteinRepository.createProtein(protein)).thenThrow(ProteinCreatingException.class);
-
-        assertThrows(ProteinCreatingException.class, () -> proteinService.saveProtein(protein));
+        assertEquals(exceptedProtein, proteinService.saveProtein(protein));
     }
 
     @Test
     void shouldReturnRightChangedRows_AfterUpdatingProtein() {
-        when(proteinRepository.updateProtein(protein)).thenReturn(1);
+        when(proteinRepository.existsById(1L)).thenReturn(true);
+        when(proteinRepository.save(protein)).thenReturn(protein);
 
-        assertEquals(1, proteinService.updateProtein(protein));
+        assertEquals(protein, proteinService.updateProtein(protein));
     }
 
     @Test
-    void shouldThrowProteinUpdatingException_AfterUpdatingProtein() {
+    void shouldThrowProteinNotFoundException_AfterUpdatingProtein() {
         Protein protein = new Protein(2, "Protein", "Brand", 100);
-        when(proteinRepository.updateProtein(protein)).thenThrow(ProteinUpdatingException.class);
+        when(proteinRepository.existsById(2L)).thenReturn(false);
 
-        assertThrows(ProteinUpdatingException.class, () -> proteinService.updateProtein(protein));
+        assertThrows(ProteinNotFoundException.class, () -> proteinService.updateProtein(protein));
     }
 
     @Test
     void shouldReturnRightChangedRows_AfterDeletingProtein() {
-        int requiredId = 1;
+        long requiredId = 1;
+        when(proteinRepository.existsById(1L)).thenReturn(true);
 
-        when(proteinRepository.deleteProtein(requiredId)).thenReturn(1);
-
-        assertEquals(1, proteinService.deleteProteinById(requiredId));
+        assertTrue(proteinService.deleteProteinById(requiredId));
     }
 
     @Test
-    void shouldThrowProteinDeletingException_AfterDeletingProtein() {
+    void shouldThrowProteinNotFoundException_AfterDeletingProtein() {
         int requiredId = 2;
 
-        when(proteinRepository.deleteProtein(requiredId)).thenThrow(ProteinDeletingException.class);
+        when(proteinRepository.existsById(2L)).thenReturn(false);
 
-        assertThrows(ProteinDeletingException.class, () -> proteinService.deleteProteinById(requiredId));
+        assertThrows(ProteinNotFoundException.class, () -> proteinService.deleteProteinById(requiredId));
     }
 }
