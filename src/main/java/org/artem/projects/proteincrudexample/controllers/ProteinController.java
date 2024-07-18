@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.artem.projects.proteincrudexample.dtos.ProteinCreatingDTO;
 import org.artem.projects.proteincrudexample.entities.Protein;
 import org.artem.projects.proteincrudexample.exceptions.ExceptionResponse;
 import org.artem.projects.proteincrudexample.services.ProteinService;
@@ -43,7 +44,7 @@ public class ProteinController {
             @ApiResponse(responseCode = "400", description = "Protein isn't created" ,  content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
     })
     @PostMapping("/createProtein")
-    public ResponseEntity<Protein> createProtein(@RequestBody Protein protein) {
+    public ResponseEntity<Protein> createProtein(@RequestBody ProteinCreatingDTO protein) {
         return ResponseEntity.ok(proteinService.saveProtein(protein));
     }
 
