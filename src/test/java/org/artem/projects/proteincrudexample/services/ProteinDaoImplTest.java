@@ -1,12 +1,12 @@
 package org.artem.projects.proteincrudexample.services;
 
+import org.artem.projects.proteincrudexample.daos.ProteinDaoImpl;
 import org.artem.projects.proteincrudexample.entities.Protein;
 import org.artem.projects.proteincrudexample.exceptions.ProteinNotFoundException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,25 +15,22 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 
 
-import static org.hamcrest.Matchers.any;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-@Disabled
 @ExtendWith(MockitoExtension.class)
-class ProteinServiceImplTest {
+class ProteinDaoImplTest {
     @Mock
     private SessionFactory sessionFactory;
+
+    @InjectMocks
+    private ProteinDaoImpl proteinDao;
 
     @Mock
     private Session session;
 
     @Mock
     private Transaction transaction;
-
-    @InjectMocks
-    private ProteinServiceImpl proteinService;
 
     private Protein protein;
 
@@ -42,39 +39,53 @@ class ProteinServiceImplTest {
         protein = new Protein(1, "Protein", "Brand", 100);
         when(sessionFactory.openSession()).thenReturn(session);
         when(session.beginTransaction()).thenReturn(transaction);
+        doNothing().when(session).close();
     }
 
     @Test
     void shouldReturnProteinObject_AfterFindById() {
+        when(session.getTransaction()).thenReturn(transaction);
+        doNothing().when(transaction).commit();
+
+        Protein returnedProtein = new Protein(1, "Protein", "Brand", 100);
         long requiredId = 1;
         when(session.get(Protein.class, requiredId)).thenReturn(protein);
 
-        assertEquals(protein, proteinService.findProteinById(requiredId));
+        assertEquals(returnedProtein, proteinDao.findProteinById(requiredId));
     }
 
     @Test
     void shouldThrowProteinNotFoundException_AfterFindingByWrongId() {
+        when(session.getTransaction()).thenReturn(transaction);
+        doNothing().when(transaction).commit();
+
         long requiredId = 2;
         when(session.get(Protein.class, requiredId)).thenReturn(null);
 
-        assertThrows(ProteinNotFoundException.class, () -> proteinService.findProteinById(requiredId));
+        assertThrows(ProteinNotFoundException.class, () -> proteinDao.findProteinById(requiredId));
     }
 
     @Test
     void shouldReturnProtein_AfterCreatingProtein() {
-        doNothing().when(session).persist(any(Protein.class));
+        when(session.getTransaction()).thenReturn(transaction);
         doNothing().when(transaction).commit();
 
-//        assertEquals(protein, proteinService.saveProtein(protein));
+        Protein savedProtein = new Protein(1, "Protein", "Brand", 100);
+        doNothing().when(session).persist(protein);
+
+        assertEquals(savedProtein, proteinDao.saveProtein(protein));
     }
 
     @Test
-    void shouldReturnRightChangedRows_AfterUpdatingProtein() {
-        when(session.get(Protein.class, protein.getId())).thenReturn(protein);
-        doNothing().when(session).merge(any(Protein.class));
+    void shouldReturnProteinObject_AfterUpdatingProtein() {
+        when(session.getTransaction()).thenReturn(transaction);
         doNothing().when(transaction).commit();
 
-        assertEquals(protein, proteinService.updateProtein(protein));
+        Protein returnedProtein = new Protein(1, "Protein", "Brand", 100);
+        when(session.get(Protein.class, protein.getId())).thenReturn(protein);
+        when(session.merge(protein)).thenReturn(protein);
+
+        assertEquals(returnedProtein, proteinDao.updateProtein(protein));
     }
 
     @Test
@@ -82,17 +93,19 @@ class ProteinServiceImplTest {
         Protein protein = new Protein(2, "Protein", "Brand", 100);
         when(session.get(Protein.class, protein.getId())).thenReturn(null);
 
-        assertThrows(ProteinNotFoundException.class, () -> proteinService.updateProtein(protein));
+        assertThrows(ProteinNotFoundException.class, () -> proteinDao.updateProtein(protein));
     }
 
     @Test
-    void shouldReturnRightChangedRows_AfterDeletingProtein() {
-        long requiredId = 1;
-        when(session.get(Protein.class, requiredId)).thenReturn(protein);
-        doNothing().when(session).remove(any(Protein.class));
+    void shouldReturnTrue_AfterDeletingProtein() {
+        when(session.getTransaction()).thenReturn(transaction);
         doNothing().when(transaction).commit();
 
-        assertTrue(proteinService.deleteProteinById(requiredId));
+        long requiredId = 1;
+        when(session.get(Protein.class, requiredId)).thenReturn(protein);
+        doNothing().when(session).remove(protein);
+
+        assertTrue(proteinDao.deleteProteinById(requiredId));
     }
 
     @Test
@@ -100,6 +113,6 @@ class ProteinServiceImplTest {
         long requiredId = 2;
         when(session.get(Protein.class, requiredId)).thenReturn(null);
 
-        assertThrows(ProteinNotFoundException.class, () -> proteinService.deleteProteinById(requiredId));
+        assertThrows(ProteinNotFoundException.class, () -> proteinDao.deleteProteinById(requiredId));
     }
 }
